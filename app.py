@@ -1,56 +1,128 @@
 import streamlit as st
+import pandas as pd
 
-# Emission factors (annual or per km/week scaled)
+# Emission factors (kg CO2e per unit)
 EMISSION_FACTORS = {
-    'vehicle_km': 0.21,               # kg CO2 per km per vehicle
-    'public_transport_weekly': 15,   # kg CO2 per week if using public transport
-    'aircon_per_unit': 200,           # annual kg CO2 per AC unit
-}
-
-EMISSION_FACTORS_MEAT = {
-    "Beef": 27,
-    "Pork": 12,
-    "Chicken": 6,
-    "Fish": 8,
-    "None": 0,
-    "Vegan": 0,
+    'vehicle_km': 0.21,  # per km driven
+    'public_transport_weekly': 2.0,  # per week if used
+    'diet_vegan': 1500,
+    'diet_mostly_vegetarian': 2000,
+    'diet_occasional_meat': 2500,
+    'diet_regular_meat_eater': 3000,
+    'aircon_per_unit': 500,
+    'energy_efficiency_factor': 0.8,
+    'clothes_per_month': 100,
+    'compost_reduction': 200,
+    'water_saving_factor': 0.7,
+    'shower_minute': 2,
 }
 
 st.title("🌍 Carbon Footprint Calculator")
-st.write("Fill in the details below to estimate your household's carbon footprint.")
 
-# Basic household inputs
-num_people = st.number_input("Number of people in household", min_value=1, max_value=20, value=1)
-num_vehicles = st.number_input("Number of vehicles owned", min_value=0, max_value=10, value=0)
-km_per_week = st.number_input("Average kilometers driven per week (all vehicles)", min_value=0, max_value=10000, value=0)
-use_public_transport = st.checkbox("Do you use public transport?")
+st.write("Please fill in your household information below:")
 
-# Diet inputs
-st.subheader("Dietary habits")
-meat_type = st.selectbox("Select type of meat you consume", list(EMISSION_FACTORS_MEAT.keys()))
-servings_per_week = st.number_input("Number of servings of this meat per week", min_value=0, max_value=21, value=0)
-serving_size = st.number_input("Average serving size in grams", min_value=50, max_value=500, value=100)
+# Inputs
+num_people = st.number_input("Number of people in household", min_value=1, max_value=20, value=3)
+num_bedrooms = st.number_input("Number of bedrooms in your home", min_value=1, max_value=10, value=3)
 
-# Air conditioning
-use_aircon = st.checkbox("Do you use air conditioning?")
+energy_type = st.selectbox(
+    "Primary energy type for household electricity",
+    ["Grid electricity", "Solar", "Other renewable", "Fossil fuels"]
+)
+
+use_aircon = st.checkbox("Do you use air-conditioning at home?")
 num_aircons = 0
 if use_aircon:
-    num_aircons = st.number_input("Number of air conditioners", min_value=1, max_value=10, value=1)
+    num_aircons = st.number_input("Number of air-conditioners in your home", min_value=1, max_value=10, value=1)
 
-# Calculate emissions
-vehicle_emission = num_vehicles * km_per_week * EMISSION_FACTORS['vehicle_km'] * 52
+use_energy_efficient_appliances = st.checkbox("Do you use energy-efficient appliances? (e.g., inverter ACs, LED lights, energy-rated fridge)")
+
+vehicle_ownership = st.checkbox("Do you or your parents own a vehicle?")
+num_vehicles = 0
+km_per_week = 0.0
+if vehicle_ownership:
+    num_vehicles = st.number_input("Number of vehicles owned", min_value=1, max_value=10, value=1)
+    km_per_week = st.number_input("Average kilometers driven per week (all vehicles)", min_value=0.0, max_value=10000.0, value=100.0)
+
+use_public_transport = st.checkbox("Do you use public transport?")
+
+diet_type = st.selectbox(
+    "Diet type",
+    ["Vegan", "Mostly vegetarian", "Occasional meat eater", "Regular meat eater"]
+)
+
+clothes_buy_freq = st.selectbox(
+    "How often do you buy new clothes or fashion items?",
+    ["Never", "Rarely", "Monthly", "Weekly"]
+)
+
+compost_food_waste = st.checkbox("Do you compost food waste?")
+
+showers_per_day = st.number_input("Average number of showers taken daily in your household", min_value=0, max_value=20, value=2)
+shower_duration_min = st.number_input("Average duration of a shower (in minutes)", min_value=0, max_value=60, value=5)
+
+use_water_saving_fixtures = st.checkbox("Do you use water-saving fixtures (low-flow taps/showers)?")
+
+# Calculations
+
+# Diet emission by type
+diet_emission_map = {
+    "Vegan": EMISSION_FACTORS['diet_vegan'],
+    "Mostly vegetarian": EMISSION_FACTORS['diet_mostly_vegetarian'],
+    "Occasional meat eater": EMISSION_FACTORS['diet_occasional_meat'],
+    "Regular meat eater": EMISSION_FACTORS['diet_regular_meat_eater'],
+}
+
+diet_emission = diet_emission_map[diet_type]
+
+# Vehicle emissions
+vehicle_emission = num_vehicles * km_per_week * EMISSION_FACTORS['vehicle_km'] * 52 if vehicle_ownership else 0
+
+# Public transport emission
 public_transport_emission = EMISSION_FACTORS['public_transport_weekly'] * 52 if use_public_transport else 0
-diet_emission = servings_per_week * (serving_size / 100) * EMISSION_FACTORS_MEAT[meat_type] * 52
+
+# Aircon emissions
 aircon_emission = num_aircons * EMISSION_FACTORS['aircon_per_unit'] if use_aircon else 0
 
-total_emission = vehicle_emission + public_transport_emission + diet_emission + aircon_emission
+# Energy efficiency adjustment (appliances)
+energy_efficiency_adj = 1.0
+if use_energy_efficient_appliances:
+    energy_efficiency_adj = EMISSION_FACTORS['energy_efficiency_factor']
+
+# Clothes emissions
+clothes_freq_map = {
+    "Never": 0,
+    "Rarely": 50,
+    "Monthly": EMISSION_FACTORS['clothes_per_month'],
+    "Weekly": 200,
+}
+
+clothes_emission = clothes_freq_map[clothes_buy_freq] * 12  # annual
+
+# Compost reduction
+compost_reduction = EMISSION_FACTORS['compost_reduction'] if compost_food_waste else 0
+
+# Water saving factor on showers
+water_saving_factor = EMISSION_FACTORS['water_saving_factor'] if use_water_saving_fixtures else 1.0
+
+# Shower emissions
+shower_emission = showers_per_day * shower_duration_min * EMISSION_FACTORS['shower_minute'] * 365 * water_saving_factor
+
+# Total emissions
+total_carbon_footprint_kgCO2 = (
+    (vehicle_emission + public_transport_emission + diet_emission + aircon_emission) * energy_efficiency_adj
+    + clothes_emission + shower_emission - compost_reduction
+)
 
 # Show results
-st.subheader("Your Estimated Annual Carbon Footprint (kg CO2):")
-st.write(f"{total_emission:,.0f} kg CO2")
+st.header("Your Estimated Annual Carbon Footprint (kg CO2):")
+st.subheader(f"{int(total_carbon_footprint_kgCO2):,} kg CO2")
 
-st.subheader("Breakdown by source:")
-st.write(f"Vehicle emissions: {vehicle_emission:,.0f} kg CO2")
-st.write(f"Public transport emissions: {public_transport_emission:,.0f} kg CO2")
-st.write(f"Diet emissions: {diet_emission:,.0f} kg CO2")
-st.write(f"Air conditioning emissions: {aircon_emission:,.0f} kg CO2")
+st.write("Breakdown by category:")
+st.write(f"Vehicle emissions: {int(vehicle_emission):,} kg CO2")
+st.write(f"Public transport emissions: {int(public_transport_emission):,} kg CO2")
+st.write(f"Diet emissions: {int(diet_emission):,} kg CO2")
+st.write(f"Air conditioning emissions: {int(aircon_emission):,} kg CO2")
+st.write(f"Clothing emissions: {int(clothes_emission):,} kg CO2")
+st.write(f"Shower emissions: {int(shower_emission):,} kg CO2")
+st.write(f"Compost reduction (subtracted): {int(compost_reduction):,} kg CO2")

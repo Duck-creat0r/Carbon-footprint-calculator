@@ -1,24 +1,22 @@
 import streamlit as st
 
-# Emission factors for different meats (kg CO2 per 100g)
-EMISSION_FACTORS_MEAT = {
-    "Beef": 27,
-    "Pork": 12,
-    "Chicken": 6,
-    "Fish": 8,
-    "None": 0,
-}
+st.title("🌍 Carbon Footprint Calculator")
 
-# ... rest of your code ...
+# Household inputs
+num_people = st.number_input("Number of people in household", min_value=1, max_value=20, step=1, value=1)
+num_vehicles = st.number_input("Number of vehicles owned", min_value=0, max_value=10, step=1, value=0)
+km_per_week = st.number_input("Average kilometers driven per week (all vehicles)", min_value=0, max_value=10000, step=10, value=0)
+use_public_transport = st.checkbox("Do you use public transport?", value=False)
 
-st.subheader("Diet - Meat Consumption")
-
+# Diet inputs (meat consumption)
 meat_type = st.selectbox("Select type of meat you consume", list(EMISSION_FACTORS_MEAT.keys()))
 red_meat_servings_per_week = st.slider("How many servings of this meat do you eat per week?", 0, 14, 3)
 serving_size_grams = st.number_input("Average serving size (grams)", min_value=50, max_value=500, value=100)
 
-# Calculate diet emissions using selected meat type
-selected_factor = EMISSION_FACTORS_MEAT[meat_type]
-diet_emission = (red_meat_servings_per_week * serving_size_grams / 100) * selected_factor * 52  # annual
+# Aircon inputs
+use_aircon = st.checkbox("Do you use air conditioning?", value=False)
+num_aircons = 0
+if use_aircon:
+    num_aircons = st.number_input("Number of air conditioners", min_value=1, max_value=10, step=1, value=1)
 
-# ... continue with other inputs and calculations ...
+# Then calculations and output...

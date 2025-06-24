@@ -1,24 +1,17 @@
 import streamlit as st
 
-# Emission factors (adjust as needed)
+# Emission factors
 EMISSION_FACTORS = {
-    'vehicle_km': 0.21,              # kg CO2 per km per vehicle
+    'vehicle_km': 0.21,               # kg CO2 per km per vehicle
     'public_transport_weekly': 15,   # kg CO2 per week if using public transport
     'aircon_per_unit': 200,           # annual kg CO2 per AC unit
-    # Emission multipliers based on red meat frequency (kg CO2/year)
-    'red_meat_freq': {
-        "Daily": 3000,
-        "A few times a week": 2250,
-        "Once a week": 1500,
-        "Rarely": 750,
-        "Never": 0,
-    }
+    'red_meat_per_100g': 27,          # kg CO2 per 100 grams of red meat
 }
 
 st.title("🌍 Carbon Footprint Calculator")
 st.write("Please fill in your household information below:")
 
-# Input validations and widgets
+# Household inputs
 num_people = st.number_input("Number of people in household", min_value=1, max_value=20, step=1, value=1)
 
 num_vehicles = st.number_input("Number of vehicles owned", min_value=0, max_value=10, step=1, value=0)
@@ -26,26 +19,27 @@ km_per_week = st.number_input("Average kilometers driven per week (all vehicles)
 
 use_public_transport = st.checkbox("Do you use public transport?", value=False)
 
-# More detailed diet frequency input
-red_meat_freq = st.selectbox(
-    "How often do you eat red meat (beef/lamb)?",
-    options=["Daily", "A few times a week", "Once a week", "Rarely", "Never"]
-)
+# Flexible diet inputs
+st.subheader("Diet - Red Meat Consumption")
+red_meat_servings_per_week = st.slider("How many servings of red meat do you eat per week?", 0, 14, 3)
+serving_size_grams = st.number_input("Average serving size (grams)", min_value=50, max_value=500, value=100)
 
 use_aircon = st.checkbox("Do you use air conditioning?", value=False)
 num_aircons = 0
 if use_aircon:
     num_aircons = st.number_input("Number of air conditioners", min_value=1, max_value=10, step=1, value=1)
 
-# Calculate emissions
+# Calculations
 vehicle_emission = num_vehicles * km_per_week * EMISSION_FACTORS['vehicle_km'] * 52  # annual
 public_transport_emission = EMISSION_FACTORS['public_transport_weekly'] * 52 if use_public_transport else 0
-diet_emission = EMISSION_FACTORS['red_meat_freq'][red_meat_freq]
+
+diet_emission = (red_meat_servings_per_week * serving_size_grams / 100) * EMISSION_FACTORS['red_meat_per_100g'] * 52  # annual
+
 aircon_emission = num_aircons * EMISSION_FACTORS['aircon_per_unit'] if use_aircon else 0
 
 total_emission = vehicle_emission + public_transport_emission + diet_emission + aircon_emission
 
-# Output results
+# Output
 st.subheader("Your Estimated Annual Carbon Footprint (kg CO2):")
 st.markdown(f"### {total_emission:,.0f} kg CO2")
 

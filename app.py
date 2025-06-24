@@ -56,17 +56,13 @@ diet_type = st.selectbox(
     ["Vegan", "Mostly vegetarian", "Occasional meat eater", "Regular meat eater"]
 )
 
+compost_food_waste = st.checkbox("Do you compost food waste?")
+
 clothes_buy_freq = st.selectbox(
     "How often do you buy new clothes or fashion items?",
     ["Never", "Rarely", "Monthly", "Weekly"]
 )
 
-compost_food_waste = st.checkbox("Do you compost food waste?")
-
-showers_per_day = st.number_input("Average number of showers taken daily in your household", min_value=0, max_value=20, value=2)
-shower_duration_min = st.number_input("Average duration of a shower (in minutes)", min_value=0, max_value=60, value=5)
-
-use_water_saving_fixtures = st.checkbox("Do you use water-saving fixtures (low-flow taps/showers)?")
 
 # Calculations
 

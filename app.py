@@ -30,8 +30,6 @@ num_children = st.number_input("Number of children (0-12 years)", min_value=0, m
 
 total_people_weighted = (num_adults * 1.0) + (num_teens * 0.8) + (num_children * 0.5)
 
-num_bedrooms = st.number_input("Number of bedrooms in your home", min_value=1, max_value=10, value=3)
-
 energy_type = st.selectbox(
     "Primary energy type for household electricity",
     ["Grid electricity", "Solar", "Other renewable", "Fossil fuels"]

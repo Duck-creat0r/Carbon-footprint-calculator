@@ -22,7 +22,14 @@ st.title("🌍 Carbon Footprint Calculator")
 st.write("Please fill in your household information below:")
 
 # Inputs
-num_people = st.number_input("Number of people in household", min_value=1, max_value=20, value=3)
+st.subheader("Household Composition")
+
+num_adults = st.number_input("Number of adults (18+ years)", min_value=0, max_value=20, value=2)
+num_teens = st.number_input("Number of teenagers (13-17 years)", min_value=0, max_value=20, value=1)
+num_children = st.number_input("Number of children (0-12 years)", min_value=0, max_value=20, value=0)
+
+total_people_weighted = (num_adults * 1.0) + (num_teens * 0.8) + (num_children * 0.5)
+
 num_bedrooms = st.number_input("Number of bedrooms in your home", min_value=1, max_value=10, value=3)
 
 energy_type = st.selectbox(

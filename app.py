@@ -63,7 +63,6 @@ clothes_buy_freq = st.selectbox(
     ["Never", "Rarely", "Monthly", "Weekly"]
 )
 
-
 # Calculations
 
 # Diet emission by type

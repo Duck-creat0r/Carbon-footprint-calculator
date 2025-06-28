@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 # Emission factors (kg CO2e per unit)
 EMISSION_FACTORS = {
@@ -15,6 +14,7 @@ EMISSION_FACTORS = {
     'compost_reduction': 200,
     'water_saving_factor': 0.7,
     'shower_minute': 2,
+    'electricity_per_kwh': 0.56,  # average Malaysia grid kg CO2/kWh
 }
 
 st.title("🌍 Carbon Footprint Calculator")
@@ -34,6 +34,10 @@ energy_type = st.selectbox(
     "Primary energy type for household electricity",
     ["Grid electricity", "Solar", "Other renewable", "Fossil fuels"]
 )
+
+# New electricity usage input
+st.subheader("Electricity Usage")
+monthly_kwh = st.number_input("Average monthly electricity usage (in kWh)", min_value=0, max_value=10000, value=400)
 
 use_aircon = st.checkbox("Do you use air-conditioning at home?")
 num_aircons = 0
@@ -115,9 +119,12 @@ water_saving_factor = EMISSION_FACTORS['water_saving_factor'] if use_water_savin
 # Shower emissions
 shower_emission = showers_per_day * shower_duration_min * EMISSION_FACTORS['shower_minute'] * 365 * water_saving_factor
 
+# Electricity emissions (annual)
+electricity_emission = monthly_kwh * 12 * EMISSION_FACTORS['electricity_per_kwh']
+
 # Total emissions
 total_carbon_footprint_kgCO2 = (
-    (vehicle_emission + public_transport_emission + diet_emission + aircon_emission) * energy_efficiency_adj
+    (vehicle_emission + public_transport_emission + diet_emission + aircon_emission + electricity_emission) * energy_efficiency_adj
     + clothes_emission + shower_emission - compost_reduction
 )
 
@@ -130,6 +137,7 @@ st.write(f"Vehicle emissions: {int(vehicle_emission):,} kg CO2")
 st.write(f"Public transport emissions: {int(public_transport_emission):,} kg CO2")
 st.write(f"Diet emissions: {int(diet_emission):,} kg CO2")
 st.write(f"Air conditioning emissions: {int(aircon_emission):,} kg CO2")
+st.write(f"Electricity emissions: {int(electricity_emission):,} kg CO2")
 st.write(f"Clothing emissions: {int(clothes_emission):,} kg CO2")
 st.write(f"Shower emissions: {int(shower_emission):,} kg CO2")
 st.write(f"Compost reduction (subtracted): {int(compost_reduction):,} kg CO2")
